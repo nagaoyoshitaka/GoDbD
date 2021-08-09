@@ -119,7 +119,7 @@ func showInputMenu() {
 			},
 		},
 	}
-
+	iw.kill = "null"
 	if _, err := IW.Run(); err != nil {
 		log.Fatal(err)
 	}
@@ -136,8 +136,13 @@ func NewMapModel() *Model {
 	defer file1.Close()
 	reader := csv.NewReader(transform.NewReader(file1, japanese.ShiftJIS.NewDecoder()))
 
-	mapList, err := reader.Read() // 1行読み出す
+	mapAndStageList, err := reader.ReadAll()
 	failOnError(err)
+	l := len(mapAndStageList)
+	mapList := make([]string, l)
+	for i := 0; i < l; i++ {
+		mapList[i] = mapAndStageList[i][0]
+	}
 	mapList = distinct(mapList)
 	cnt := len(mapList)
 	m := &Model{items: make([]Item, cnt)}
@@ -154,16 +159,13 @@ func NewStageModel() *Model {
 	failOnError(err)
 	defer file1.Close()
 	reader := csv.NewReader(transform.NewReader(file1, japanese.ShiftJIS.NewDecoder()))
-
-	mapList, err := reader.Read() // 1行読み出す
+	mapAndStageList, err := reader.ReadAll()
 	failOnError(err)
-	stageList, err := reader.Read() // 1行読み出す
-	failOnError(err)
-	cnt := len(mapList)
+	cnt := len(mapAndStageList)
 	m := &Model{items: make([]Item, cnt)}
 	for i := 0; i < cnt; i++ {
-		name := stageList[i]
-		value := stageList[i]
+		name := mapAndStageList[i][1]
+		value := mapAndStageList[i][1]
 		m.items[i] = Item{name, value}
 	}
 	return m
@@ -176,15 +178,13 @@ func restrictStageModel(mp string) *Model {
 	defer file1.Close()
 	reader := csv.NewReader(transform.NewReader(file1, japanese.ShiftJIS.NewDecoder()))
 
-	mapList, err := reader.Read() // 1行読み出す
+	mapAndStageList, err := reader.ReadAll()
 	failOnError(err)
-	stageList, err := reader.Read() // 1行読み出す
-	failOnError(err)
-	cnt := len(mapList)
+	cnt := len(mapAndStageList)
 	//まずは個数を確かめる
 	num := 0
 	for i := 0; i < cnt; i++ {
-		if mp == mapList[i] {
+		if mp == mapAndStageList[i][0] {
 			num++
 		}
 	}
@@ -192,9 +192,9 @@ func restrictStageModel(mp string) *Model {
 	m := &Model{items: make([]Item, num)}
 	index := 0
 	for i := 0; i < cnt; i++ {
-		if mp == mapList[i] {
-			name := stageList[i]
-			value := stageList[i]
+		if mp == mapAndStageList[i][0] {
+			name := mapAndStageList[i][1]
+			value := mapAndStageList[i][1]
 			m.items[index] = Item{name, value}
 			index++
 		}
@@ -209,13 +209,13 @@ func NewKillerModel() *Model {
 	failOnError(err)
 	defer file1.Close()
 	reader := csv.NewReader(transform.NewReader(file1, japanese.ShiftJIS.NewDecoder()))
-	record, err := reader.Read() // 1行読み出す
+	record, err := reader.ReadAll()
 	failOnError(err)
 
 	m := &Model{items: make([]Item, len(record))}
 	for i, v := range record {
-		name := v
-		value := v
+		name := v[0]
+		value := v[0]
 		m.items[i] = Item{name, value}
 	}
 
