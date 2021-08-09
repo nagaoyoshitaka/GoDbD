@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"encoding/csv"
 	"os"
@@ -252,16 +253,18 @@ func (iw *MyInputWindow) registerClicked() {
 	kill := iw.getKill()
 	mp := iw.mapModel.items[iw.mapComboBox.CurrentIndex()].value
 	stage := iw.stageModel.items[iw.stageComboBox.CurrentIndex()].value
+	const layout = "2006-01-02"
+	date := time.Now().Format(layout)
 	showInformDialog(killer, kill, mp, stage)
-	register(killer, kill, mp, stage)
+	register(killer, kill, mp, stage, date)
 }
 
-func register(killer string, kill string, mp string, stage string) {
+func register(killer string, kill string, mp string, stage string, date string) {
 	file1, err := os.OpenFile("matchLog.csv", os.O_RDWR|os.O_APPEND, 0600)
 	failOnError(err)
 	defer file1.Close()
 	writer := csv.NewWriter(transform.NewWriter(file1, japanese.ShiftJIS.NewEncoder()))
-	var matchLog []string = []string{killer, kill, mp, stage}
+	var matchLog []string = []string{killer, kill, mp, stage, date}
 	writer.Write(matchLog)
 	writer.Flush()
 }
