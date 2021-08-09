@@ -37,7 +37,7 @@ func showInputMenu() {
 	IW := MainWindow{
 		AssignTo: &iw.MainWindow, // Widgetを実体に割り当て
 		Title:    "InputWindow",
-		Size:     Size{400, 150},
+		Size:     Size{Width: 400, Height: 150},
 		Layout:   VBox{}, // ウィジェットを垂直方向に並べる
 		Children: []Widget{
 			Label{
@@ -47,7 +47,7 @@ func showInputMenu() {
 			ComboBox{
 				Model:    iw.killerModel,
 				AssignTo: &iw.killerComboBox,
-				MaxSize:  Size{50, 50},
+				MaxSize:  Size{Width: 50, Height: 50},
 			},
 			Label{
 				Text:     "サク数",
@@ -101,7 +101,7 @@ func showInputMenu() {
 			ComboBox{
 				Model:                 iw.mapModel,
 				AssignTo:              &iw.mapComboBox,
-				MaxSize:               Size{50, 50},
+				MaxSize:               Size{Width: 50, Height: 50},
 				OnCurrentIndexChanged: iw.mapChanged,
 			},
 			Label{
@@ -111,7 +111,7 @@ func showInputMenu() {
 			ComboBox{
 				Model:    iw.stageModel,
 				AssignTo: &iw.stageComboBox,
-				MaxSize:  Size{50, 50},
+				MaxSize:  Size{Width: 50, Height: 50},
 			},
 			PushButton{
 				Text:      "登録",
@@ -239,7 +239,11 @@ type Item struct {
 //ステージが対応するものに絞り込み
 func (iw *MyInputWindow) mapChanged() {
 	mp := iw.mapModel.items[iw.mapComboBox.CurrentIndex()].value
-	iw.stageComboBox.SetModel(restrictStageModel(mp))
+	restrictModel := restrictStageModel(mp)
+	//表示上の変更
+	iw.stageComboBox.SetModel(restrictModel)
+	//内部での変更
+	iw.stageModel = restrictModel
 }
 
 //試合情報の登録
@@ -249,6 +253,17 @@ func (iw *MyInputWindow) registerClicked() {
 	mp := iw.mapModel.items[iw.mapComboBox.CurrentIndex()].value
 	stage := iw.stageModel.items[iw.stageComboBox.CurrentIndex()].value
 	showInformDialog(killer, kill, mp, stage)
+	register(killer, kill, mp, stage)
+}
+
+func register(killer string, kill string, mp string, stage string) {
+	file1, err := os.OpenFile("matchLog.csv", os.O_RDWR|os.O_APPEND, 0600)
+	failOnError(err)
+	defer file1.Close()
+	writer := csv.NewWriter(transform.NewWriter(file1, japanese.ShiftJIS.NewEncoder()))
+	var matchLog []string = []string{killer, kill, mp, stage}
+	writer.Write(matchLog)
+	writer.Flush()
 }
 
 func (iw *MyInputWindow) kill0Clicked() {
