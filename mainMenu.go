@@ -26,6 +26,12 @@ func showMainMenu() {
 				OnClicked: mw.inputMenuClicked,
 			},
 			PushButton{
+				Text:      "データ詳細",
+				MaxSize:   Size{Width: 80, Height: 30},
+				MinSize:   Size{Width: 80, Height: 30},
+				OnClicked: mw.databaseMenuClicked,
+			},
+			PushButton{
 				Text:      "統計データ",
 				MaxSize:   Size{Width: 80, Height: 30},
 				MinSize:   Size{Width: 80, Height: 30},
@@ -42,4 +48,18 @@ func showMainMenu() {
 	if _, err := MW.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+//データ入力ウィンドウ表示
+func (mw *MyMenuWindow) inputMenuClicked() {
+	mw.SetVisible(false)
+	showInputMenu()
+	mw.SetVisible(true)
+}
+
+//データ詳細ウィンドウ表示
+func (mw *MyMenuWindow) databaseMenuClicked() {
+	mw.SetVisible(false)
+	showDatabaseMenu()
+	mw.SetVisible(true)
 }

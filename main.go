@@ -16,13 +16,6 @@ type MyStatsWindow struct {
 	textArea *walk.TextEdit
 }
 
-//データ入力ウィンドウ表示
-func (mw *MyMenuWindow) inputMenuClicked() {
-	mw.SetVisible(false)
-	showInputMenu()
-	mw.SetVisible(true)
-}
-
 //統計データウィンドウ表示
 func (mw *MyMenuWindow) statsMenuClicked() {
 }
