@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/lxn/walk"
 	. "github.com/lxn/walk/declarative"
@@ -66,6 +68,10 @@ func showDatabaseMenu() {
 		Size:     Size{Width: 1000, Height: 500},
 		Layout:   VBox{}, // ウィジェットを垂直方向に並べる
 		Children: []Widget{
+			PushButton{
+				Text:      "Delete",
+				OnClicked: dw.deleteClicked, // ログイン試行イベント
+			},
 			TableView{
 				AssignTo: &dw.tv,
 				Columns: []TableViewColumn{
@@ -75,7 +81,8 @@ func showDatabaseMenu() {
 					{Name: "stage", Title: "stage"},
 					{Name: "date", Title: "date"},
 				},
-				Model: dw.dbModel,
+				Model:                 dw.dbModel,
+				OnCurrentIndexChanged: dw.rowChanged,
 			},
 		},
 	}
@@ -103,4 +110,33 @@ func NewDatabaseModel() *databaseModel {
 		m.items[i] = &databaseItem{killer: killer, kill: kill, mp: mp, stage: stage, date: date}
 	}
 	return m
+}
+
+//対象レコード削除
+func (dw *MyDatabaseWindow) deleteClicked() {
+	//fmt.Println(strconv.Itoa(dw.tv.CurrentIndex()))
+	rowIndex := strconv.Itoa(dw.tv.CurrentIndex())
+	file, err := os.Open("matchLog.csv")
+	failOnError(err)
+	defer file.Close()
+	reader := csv.NewReader(transform.NewReader(file, japanese.ShiftJIS.NewDecoder()))
+	record, err := reader.ReadAll()
+	failOnError(err)
+	newfile, err := os.Create("matchLog.csv")
+	failOnError(err)
+	writer := csv.NewWriter(transform.NewWriter(newfile, japanese.ShiftJIS.NewEncoder()))
+	for i, rec := range record {
+		fmt.Println(strconv.Itoa(i))
+		fmt.Println(rowIndex)
+		if strconv.Itoa(i) != rowIndex {
+			writer.Write(rec)
+			fmt.Println(rec)
+		}
+	}
+	writer.Flush()
+	newModel := NewDatabaseModel()
+	dw.tv.SetModel(newModel)
+}
+
+func (dw *MyDatabaseWindow) rowChanged() {
 }
