@@ -25,18 +25,18 @@ import (
 
 type MyStatsWindow struct {
 	*walk.MainWindow
-	playerLabel         *walk.Label
-	spanLabel           *walk.Label
-	graphTypeLabel      *walk.Label
-	killerRadioButton   *walk.RadioButton
-	survivorRadioButton *walk.RadioButton
-	dayRadioButton      *walk.RadioButton
-	monthRadioButton    *walk.RadioButton
-	yearRadioButton     *walk.RadioButton
-	killRateRadioButton *walk.RadioButton
-	playRateRadioButton *walk.RadioButton
-	imageView           *walk.ImageView
-	period              string
+	playerLabel          *walk.Label
+	spanLabel            *walk.Label
+	graphTypeLabel       *walk.Label
+	killerRadioButton    *walk.RadioButton
+	survivorRadioButton  *walk.RadioButton
+	dayRadioButton       *walk.RadioButton
+	monthRadioButton     *walk.RadioButton
+	yearRadioButton      *walk.RadioButton
+	killRateRadioButton  *walk.RadioButton
+	playTimesRadioButton *walk.RadioButton
+	imageView            *walk.ImageView
+	period               string
 }
 
 type Mode struct {
@@ -123,11 +123,11 @@ func showStatsMenu() {
 						OnClicked: sw.killRateClicked,
 					},
 					RadioButton{
-						AssignTo:  &sw.playRateRadioButton,
+						AssignTo:  &sw.playTimesRadioButton,
 						Name:      "play rate",
 						Text:      "play rate",
 						Value:     "play rate",
-						OnClicked: sw.playRateClicked,
+						OnClicked: sw.playTimesClicked,
 					},
 				},
 			},
@@ -167,17 +167,17 @@ func (sw *MyStatsWindow) killRateClicked() {
 	//キルレのデータを取得
 	X, Y := sw.makeKillRate()
 	//キルレのグラフを保存
-	sw.showKillRate(X, Y)
+	sw.showStatsGraph(X, Y, "kill rate")
 	//キルレのグラフを表示
-	img, _ := walk.NewImageFromFile("sample2.png")
+	img, _ := walk.NewImageFromFile("stats.png")
 	img_walk, _ := walk.ImageFrom(img)
 	sw.imageView.SetImage(img_walk)
 }
 
-func (sw *MyStatsWindow) showKillRate(labelX []string, dataY []float64) {
+func (sw *MyStatsWindow) showStatsGraph(labelX []string, dataY []float64, title string) {
 	//new plot
 	p := plot.New()
-	p.Title.Text = "only english title"
+	p.Title.Text = title
 	//X
 	p.NominalX(labelX...)
 	p.X.Tick.Label.Rotation = math.Pi / 2.5
@@ -186,10 +186,10 @@ func (sw *MyStatsWindow) showKillRate(labelX []string, dataY []float64) {
 	//Y
 	labelY := plotter.Values{}
 	for _, y := range dataY {
-		labelY = append(dataY, y)
+		labelY = append(labelY, y)
 	}
-	p.Y.Min = 0.0
-	p.Y.Max = 4.0
+	//p.Y.Min = 0.0
+	//p.Y.Max = 4.0
 	//new bar chart
 	breadth := vg.Points(15)
 	bar, err := plotter.NewBarChart(labelY, breadth)
@@ -202,9 +202,8 @@ func (sw *MyStatsWindow) showKillRate(labelX []string, dataY []float64) {
 	bar.Offset = 0
 	bar.Horizontal = false
 	p.Add(bar)
-	p.Title.Text = "kill rate"
 
-	if err := p.Save(10*vg.Inch, 5*vg.Inch, "sample2.png"); err != nil {
+	if err := p.Save(10*vg.Inch, 5*vg.Inch, "stats.png"); err != nil {
 		panic(err)
 	}
 }
@@ -212,58 +211,57 @@ func (sw *MyStatsWindow) showKillRate(labelX []string, dataY []float64) {
 func (sw *MyStatsWindow) makeKillRate() ([]string, []float64) {
 	p := sw.period
 	if p == "day" {
-		Xarray, Yarray := makeDayArray()
+		Xarray := makeDayArray()
+		Yarray := calcMeanArray(Xarray)
 		return Xarray, Yarray
 	} else if p == "month" {
-		Xarray, Yarray := makeMonthArray()
+		Xarray := makeMonthArray()
+		Yarray := calcMeanArray(Xarray)
 		return Xarray, Yarray
 	} else if p == "year" {
-		Xarray, Yarray := makeYearArray()
+		Xarray := makeYearArray()
+		Yarray := calcMeanArray(Xarray)
 		return Xarray, Yarray
 	}
 	return make([]string, 0), make([]float64, 0)
 }
 
-func makeDayArray() ([]string, []float64) {
+func makeDayArray() []string {
 	num := 30
 	days := make([]string, num)
 	const layout = "2006-01-02"
 	for i := 0; i < num; i++ {
-		date := time.Now().AddDate(0, 0, -i).Format(layout)
+		date := time.Now().AddDate(0, 0, i-num+1).Format(layout)
 		days[i] = date
 	}
-	kills := calcMeanArray(days, num)
-	return days, kills
+	return days
 }
 
-func makeMonthArray() ([]string, []float64) {
+func makeMonthArray() []string {
 	num := 12
 	months := make([]string, num)
 	const layout = "2006-01"
 	for i := 0; i < num; i++ {
-		month := time.Now().AddDate(0, -i, 0).Format(layout)
+		month := time.Now().AddDate(0, i-num+1, 0).Format(layout)
 		months[i] = month
 	}
-	kills := calcMeanArray(months, num)
-
-	return months, kills
+	return months
 }
 
-func makeYearArray() ([]string, []float64) {
+func makeYearArray() []string {
 	num := 5
 	years := make([]string, num)
 	const layout = "2006"
-	for i := num - 1; i >= 0; i-- {
-		year := time.Now().AddDate(-i, 0, 0).Format(layout)
+	for i := 0; i < num; i++ {
+		year := time.Now().AddDate(i-num+1, 0, 0).Format(layout)
 		years[i] = year
 	}
-	kills := calcMeanArray(years, num)
-	return years, kills
+	return years
 }
 
-func calcMeanArray(periodSet []string, num int) []float64 {
+func calcMeanArray(periodSet []string) []float64 {
+	num := len(periodSet)
 	kills := make([]float64, num)
-	//統計データのcsv読み込み
 	file1, err := os.Open("matchLog.csv")
 	failOnError(err)
 	defer file1.Close()
@@ -272,6 +270,22 @@ func calcMeanArray(periodSet []string, num int) []float64 {
 	failOnError(err)
 	for i, period := range periodSet {
 		c := calcMean(period, record)
+		kills[i] = c
+	}
+	return kills
+}
+
+func calcSumArray(periodSet []string) []float64 {
+	num := len(periodSet)
+	kills := make([]float64, num)
+	file1, err := os.Open("matchLog.csv")
+	failOnError(err)
+	defer file1.Close()
+	reader := csv.NewReader(transform.NewReader(file1, japanese.ShiftJIS.NewDecoder()))
+	record, err := reader.ReadAll()
+	failOnError(err)
+	for i, period := range periodSet {
+		c := calcSum(period, record)
 		kills[i] = c
 	}
 	return kills
@@ -293,5 +307,38 @@ func calcMean(period string, record [][]string) float64 {
 	return float64(sum) / float64(cnt)
 }
 
-func (sw *MyStatsWindow) playRateClicked() {
+func calcSum(period string, record [][]string) float64 {
+	sum := 0
+	for _, rec := range record {
+		if strings.Contains(rec[4], period) {
+			sum += 1
+		}
+	}
+	return float64(sum)
+}
+
+func (sw *MyStatsWindow) playTimesClicked() {
+	X, Y := sw.makePlayTimes()
+	sw.showStatsGraph(X, Y, "play times")
+	img, _ := walk.NewImageFromFile("stats.png")
+	img_walk, _ := walk.ImageFrom(img)
+	sw.imageView.SetImage(img_walk)
+}
+
+func (sw *MyStatsWindow) makePlayTimes() ([]string, []float64) {
+	p := sw.period
+	if p == "day" {
+		Xarray := makeDayArray()
+		Yarray := calcSumArray(Xarray)
+		return Xarray, Yarray
+	} else if p == "month" {
+		Xarray := makeMonthArray()
+		Yarray := calcSumArray(Xarray)
+		return Xarray, Yarray
+	} else if p == "year" {
+		Xarray := makeYearArray()
+		Yarray := calcSumArray(Xarray)
+		return Xarray, Yarray
+	}
+	return make([]string, 0), make([]float64, 0)
 }
