@@ -43,6 +43,15 @@ func showLoginMenu() {
 
 // ログイン試行
 func (lw *MyLoginWindow) pbClicked() {
+	if lw.textArea.Text() == "dbd" {
+		lw.login()
+	} else {
+		showMessage("error", "incorrect password")
+	}
+}
+
+func (lw *MyLoginWindow) login() {
+
 	lw.SetVisible(false)
 	showMainMenu()
 	lw.SetVisible(true)

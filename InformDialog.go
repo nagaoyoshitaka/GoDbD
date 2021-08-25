@@ -46,3 +46,23 @@ func showInformDialog(killer string, kill string, mp string, stage string) {
 		log.Fatal(err)
 	}
 }
+
+func showMessage(title string, message string) {
+	id := &MyInformWindow{}
+	ID := MainWindow{
+		AssignTo: &id.MainWindow, // Widgetを実体に割り当て
+		Title:    title,
+		Size:     Size{Width: 300, Height: 50}, //width×height
+		Layout:   VBox{},                       // ウィジェットを垂直方向に並べる
+		Children: []Widget{
+			Label{
+				Text:     message,
+				AssignTo: &id.informLabel,
+			},
+		},
+	}
+
+	if _, err := ID.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
