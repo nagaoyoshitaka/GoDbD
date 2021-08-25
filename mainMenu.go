@@ -63,3 +63,10 @@ func (mw *MyMenuWindow) databaseMenuClicked() {
 	showDatabaseMenu()
 	mw.SetVisible(true)
 }
+
+//統計情報ウィンドウ表示
+func (mw *MyMenuWindow) statsMenuClicked() {
+	mw.SetVisible(false)
+	showStatsMenu()
+	mw.SetVisible(true)
+}

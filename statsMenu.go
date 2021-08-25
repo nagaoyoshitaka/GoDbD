@@ -133,7 +133,7 @@ func showStatsMenu() {
 			},
 			ImageView{
 				Background: SolidColorBrush{Color: walk.RGB(255, 191, 0)},
-				Image:      "sample1.png",
+				Image:      "DbD.jpeg",
 				Margin:     1,
 				Mode:       ImageViewModeIdeal,
 				AssignTo:   &sw.imageView,
